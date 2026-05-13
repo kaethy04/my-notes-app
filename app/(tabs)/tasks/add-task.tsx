@@ -1,9 +1,10 @@
-import { updateTask } from "@/lib/database";
-import { useState } from "react";
+import React, { useState } from "react";
 
-import { router, useLocalSearchParams } from "expo-router";
+import { addTask } from "@/lib/database";
+import { router } from "expo-router";
 import {
   Alert,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -13,38 +14,39 @@ import {
 
 const statusOptions = ["Pending", "Ongoing", "Finished"];
 
-export default function EditTaskScreen() {
-  const params = useLocalSearchParams<{
-    id: string;
-    title: string;
-    description: string;
-    status: string;
-  }>();
+export default function AddTaskScreen() {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("Pending");
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const [title, setTitle] = useState(params.title || "");
-  const [description, setDescription] = useState(params.description || "");
-  const [status, setStatus] = useState(params.status || "Pending");
-
-  const handleUpdate = () => {
+  const handleSave = async () => {
     try {
       if (!title.trim()) {
         throw new Error("Task title is required");
       }
 
-      updateTask(Number(params.id), title, description, status);
-      Alert.alert("Success", `Task updated successfully.`);
-      router.replace("/tasks");
+      await addTask(title, description, status);
+      setSuccessMessage(`Task "${title}" added successfully.`);
+      setSuccessModalVisible(true);
     } catch (error) {
+      console.error("Error saving task:", error);
       Alert.alert(
-        "Update Error",
+        "Error",
         error instanceof Error ? error.message : "Something went wrong",
       );
     }
   };
 
+  const closeSuccessModal = () => {
+    setSuccessModalVisible(false);
+    router.back();
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Edit Task</Text>
+      <Text style={styles.title}>Add Task</Text>
 
       <TextInput
         style={styles.input}
@@ -84,9 +86,26 @@ export default function EditTaskScreen() {
         ))}
       </View>
 
-      <Pressable style={styles.button} onPress={handleUpdate}>
-        <Text style={styles.buttonText}>Update Task</Text>
+      <Pressable style={styles.button} onPress={handleSave}>
+        <Text style={styles.buttonText}>Save Task</Text>
       </Pressable>
+
+      <Modal
+        visible={successModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeSuccessModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Saved</Text>
+            <Text style={styles.modalMessage}>{successMessage}</Text>
+            <Pressable style={styles.modalButton} onPress={closeSuccessModal}>
+              <Text style={styles.modalButtonText}>OK</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -98,11 +117,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF5F7",
   },
   input: {
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#E63946",
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+    backgroundColor: "#fff",
   },
   textArea: {
     minHeight: 100,
@@ -112,6 +132,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 10,
+    color: "#8B3A3A",
   },
   statusContainer: {
     flexDirection: "row",
@@ -120,8 +141,8 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   statusButton: {
-    borderWidth: 1,
-    borderColor:"#E63946",
+    borderWidth: 2,
+    borderColor: "#E63946",
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -132,7 +153,7 @@ const styles = StyleSheet.create({
     borderColor: "#A91D3A",
   },
   statusButtonText: {
-    color: "#A91D3A",
+    color: "#8B3A3A",
     fontWeight: "600",
   },
   statusButtonTextActive: {
@@ -142,6 +163,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "700",
     marginBottom: 16,
+    color: "#8B3A3A",
   },
   button: {
     backgroundColor: "#A91D3A",
@@ -152,5 +174,44 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
     fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
+    padding: 24,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 360,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 2,
+    borderColor: "#E63946",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#8B3A3A",
+    marginBottom: 12,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: "#5a3a3a",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalButton: {
+    backgroundColor: "#A91D3A",
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 10,
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontWeight: "700",
   },
 });

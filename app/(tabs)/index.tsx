@@ -5,11 +5,14 @@ import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function Index() {
   useEffect(() => {
-    try {
-      initDatabase();
-    } catch (error) {
-      Alert.alert("Database Error", "Failed to initialize database");
-    }
+    const initialize = async () => {
+      try {
+        await initDatabase();
+      } catch (error) {
+        Alert.alert("Database Error", "Failed to initialize database");
+      }
+    };
+    initialize();
   }, []);
 
   return (
@@ -17,7 +20,7 @@ export default function Index() {
       <Text style={styles.title}>My Notes</Text>
       <Text style={styles.subtitle}>Welcome user</Text>
 
-      <Pressable style={styles.button} onPress={() => router.push("/tasks")}>
+      <Pressable style={styles.button} onPress={() => router.push("/(tabs)/tasks/tasks")}>
         <Text style={styles.buttonText}>Open Tasks</Text>
       </Pressable>
     </View>

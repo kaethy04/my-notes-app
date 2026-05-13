@@ -9,9 +9,9 @@ export type Task = {
 
 const db = SQLite.openDatabaseSync("tasks.db");
 
-export function initDatabase() {
+export async function initDatabase() {
   try {
-    db.execSync(`
+    await db.execAsync(`
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
@@ -25,9 +25,9 @@ export function initDatabase() {
   }
 }
 
-export function addTask(title: string, description: string, status: string) {
+export async function addTask(title: string, description: string, status: string) {
   try {
-    db.runSync(
+    await db.runAsync(
       "INSERT INTO tasks (title, description, status) VALUES (?, ?, ?)",
       [title, description, status],
     );
@@ -37,14 +37,14 @@ export function addTask(title: string, description: string, status: string) {
   }
 }
 
-export function updateTask(
+export async function updateTask(
   id: number,
   title: string,
   description: string,
   status: string,
 ) {
   try {
-    db.runSync(
+    await db.runAsync(
       "UPDATE tasks SET title = ?, description = ?, status = ? WHERE id = ?",
       [title, description, status, id],
     );
@@ -54,18 +54,18 @@ export function updateTask(
   }
 }
 
-export function deleteTask(id: number) {
+export async function deleteTask(id: number) {
   try {
-    db.runSync("DELETE FROM tasks WHERE id = ?", [id]);
+    await db.runAsync("DELETE FROM tasks WHERE id = ?", [id]);
   } catch (error) {
     console.error("Error deleting task: ", error);
     throw error;
   }
 }
 
-export function getTasks(): Task[] {
+export async function getTasks(): Promise<Task[]> {
   try {
-    return db.getAllSync("SELECT * FROM tasks ORDER BY id DESC") as Task[];
+    return await db.getAllAsync("SELECT * FROM tasks ORDER BY id DESC") as Task[];
   } catch (error) {
     console.error("Error fetching tasks: ", error);
     throw error;
